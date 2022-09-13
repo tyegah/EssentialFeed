@@ -51,7 +51,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         // And we change the stubbed error with this to keep the spy as a spy, no behavior
         // And this is how the order should be. The completions should be arranged after the sut.load()
         let clientError = NSError(domain: "", code: 0)
-        client.completions[0](clientError)
+        client.complete(with: clientError)
        
         // Assert
         XCTAssertEqual(capturedErrors, [.connectivity])
@@ -75,6 +75,10 @@ class RemoteFeedLoaderTests: XCTestCase {
             // We're moving the test logic from the RemoteFeedLoader to HTTPClient
             requestedURLs.append(url) //--> This is the test logic. This is created for testing purposes
             
+        }
+        
+        func complete(with error: Error, at index: Int = 0) {
+            completions[index](error)
         }
     }
 }
