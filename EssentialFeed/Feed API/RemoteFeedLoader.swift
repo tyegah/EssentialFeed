@@ -30,7 +30,12 @@ public final class RemoteFeedLoader {
         // And it is best to use composition instead of singleton.
         client.get(from: url) {
             error, response in
-            completion(.connectivity)
+            if response != nil {
+                completion(.invalidData)
+            }
+            else {
+                completion(.connectivity)
+            }
         }
     }
 }
