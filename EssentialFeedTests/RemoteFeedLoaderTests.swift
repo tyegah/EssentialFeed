@@ -66,19 +66,19 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     // Move the test logic to a spy instead
     class HTTPClientSpy: HTTPClient {
-        var requestedURLs:[URL] = []
-        var completions = [(Error) -> Void]()
+        var requestedURLs:[URL] {
+            return messages.map { $0.url }
+        }
+        var messages = [(url: URL, completion: (Error) -> Void)]()
         var error:Error?
         
         func get(from url: URL, completion: @escaping (Error) -> Void) {
-            completions.append(completion)
             // We're moving the test logic from the RemoteFeedLoader to HTTPClient
-            requestedURLs.append(url) //--> This is the test logic. This is created for testing purposes
-            
+            messages.append((url, completion)) //--> This is the test logic. This is created for testing purposes
         }
         
         func complete(with error: Error, at index: Int = 0) {
-            completions[index](error)
+            messages[index].completion(error)
         }
     }
 }
