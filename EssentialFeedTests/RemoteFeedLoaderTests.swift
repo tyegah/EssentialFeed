@@ -40,13 +40,21 @@ class RemoteFeedLoaderTests: XCTestCase {
         let url = URL(string: "https://a-given-url.com")!
         let (sut, client) = makeSUT(url: url)
         // Act
-        var capturedError:RemoteFeedLoader.Error?
-        client.error = NSError(domain: "", code: 0)
+        var capturedErrors = [RemoteFeedLoader.Error]()
         sut.load() {
-            error in capturedError = error
+            capturedErrors.append($0)
         }
+        
+        // This behavior is called stubbing (stubbing error), adding behavior to a class
+        // So now we're mixing the spy with a stub behavior, and we should only keep the spy as a spy.
+//        client.error = NSError(domain: "", code: 0)
+        // And we change the stubbed error with this to keep the spy as a spy, no behavior
+        // And this is how the order should be. The completions should be arranged after the sut.load()
+        let clientError = NSError(domain: "", code: 0)
+        client.completions[0](clientError)
+       
         // Assert
-        XCTAssertEqual(capturedError, .connectivity)
+        XCTAssertEqual(capturedErrors, [.connectivity])
     }
     
     // MARK: - Helpers
@@ -59,12 +67,11 @@ class RemoteFeedLoaderTests: XCTestCase {
     // Move the test logic to a spy instead
     class HTTPClientSpy: HTTPClient {
         var requestedURLs:[URL] = []
+        var completions = [(Error) -> Void]()
         var error:Error?
         
         func get(from url: URL, completion: @escaping (Error) -> Void) {
-            if let error = error {
-                completion(error)
-            }
+            completions.append(completion)
             // We're moving the test logic from the RemoteFeedLoader to HTTPClient
             requestedURLs.append(url) //--> This is the test logic. This is created for testing purposes
             
