@@ -20,17 +20,15 @@ class RemoteFeedLoader {
     }
 }
 
-class HTTPClient {
-    func get(from url: URL) {
-        
-    }
+protocol HTTPClient {
+    func get(from url: URL)
 }
 
 // Move the test logic to a spy instead
 class HTTPClientSpy: HTTPClient {
     var requestedURL: URL?
     
-    override func get(from url: URL) {
+    func get(from url: URL) {
         // We're moving the test logic from the RemoteFeedLoader to HTTPClient
         requestedURL = url //--> This is the test logic. This is created for testing purposes
     }
