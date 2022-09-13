@@ -19,7 +19,8 @@ class HTTPClient {
     private init() {}
     
     func get(from url: URL) {
-        requestedURL = url
+        // We're moving the test logic from the RemoteFeedLoader to HTTPClient
+        requestedURL = url //--> This is the test logic. This is created for testing purposes
     }
     
     var requestedURL: URL?
