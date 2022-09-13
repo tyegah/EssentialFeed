@@ -24,7 +24,7 @@ public final class RemoteFeedLoader {
         self.client = client
     }
     
-    public func load(completion: @escaping (Error) -> Void = { _ in }) {
+    public func load(completion: @escaping (Error) -> Void) {
         // We don't need to know or locate where the HTTPClient is, so we don't need the singleton
         // And it is best to use composition instead of singleton.
         client.get(from: url) {
