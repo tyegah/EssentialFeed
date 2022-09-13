@@ -61,17 +61,18 @@ class RemoteFeedLoaderTests: XCTestCase {
         // Arrange
         let url = URL(string: "https://a-given-url.com")!
         let (sut, client) = makeSUT(url: url)
-        // Act
-        var capturedErrors = [RemoteFeedLoader.Error]()
-        sut.load() {
-            capturedErrors.append($0)
-        }
+        let samples = [199, 201, 300, 400, 500]
         
-        let clientError = NSError(domain: "", code: 0)
-        client.complete(withStatusCode: 400)
-       
-        // Assert
-        XCTAssertEqual(capturedErrors, [.invalidData])
+        samples.enumerated().forEach { index, code in
+            // Act
+            var capturedErrors = [RemoteFeedLoader.Error]()
+            sut.load() {
+                capturedErrors.append($0)
+            }
+            client.complete(withStatusCode: code, at: index)
+            // Assert
+            XCTAssertEqual(capturedErrors, [.invalidData])
+        }
     }
     
     // MARK: - Helpers
