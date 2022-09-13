@@ -7,8 +7,10 @@
 
 import Foundation
 
+public typealias HTTPClientResult = Swift.Result<HTTPURLResponse, Error>
+
 public protocol HTTPClient {
-    func get(from url: URL, completion: @escaping (Error?, HTTPURLResponse?) -> Void)
+    func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void)
 }
 
 public final class RemoteFeedLoader {
@@ -29,11 +31,11 @@ public final class RemoteFeedLoader {
         // We don't need to know or locate where the HTTPClient is, so we don't need the singleton
         // And it is best to use composition instead of singleton.
         client.get(from: url) {
-            error, response in
-            if response != nil {
+            result in
+            switch result {
+            case .success:
                 completion(.invalidData)
-            }
-            else {
+            case .failure:
                 completion(.connectivity)
             }
         }
