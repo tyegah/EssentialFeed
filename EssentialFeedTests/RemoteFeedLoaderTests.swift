@@ -8,16 +8,19 @@
 import XCTest
 
 class RemoteFeedLoader {
+    let client: HTTPClient
+    init(client: HTTPClient) {
+        self.client = client
+    }
+    
     func load() {
-        HTTPClient.shared.get(from: URL(string: "https://a-url.com")!)
+        // We don't need to know or locate where the HTTPClient is, so we don't need the singleton
+        // And it is best to use composition instead of singleton.
+        client.get(from: URL(string: "https://a-url.com")!)
     }
 }
 
 class HTTPClient {
-    static var shared = HTTPClient()
-    
-//    private init() {}
-    
     func get(from url: URL) {
         
     }
@@ -36,16 +39,14 @@ class HTTPClientSpy: HTTPClient {
 class RemoteFeedLoaderTests: XCTestCase {
     func test_init_doesNotRequestDataFromURL() {
         let client = HTTPClientSpy()
-        HTTPClient.shared = client
-        _ = RemoteFeedLoader()
+        _ = RemoteFeedLoader(client: client)
         XCTAssertNil(client.requestedURL)
     }
     
     func test_load_requestsDataFromURL() {
         // Arrange
         let client = HTTPClientSpy()
-        HTTPClient.shared = client
-        let sut = RemoteFeedLoader()
+        let sut = RemoteFeedLoader(client: client)
         // Act
         sut.load()
         // Assert
