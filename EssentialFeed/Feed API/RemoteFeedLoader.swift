@@ -22,21 +22,23 @@ public final class RemoteFeedLoader {
         case invalidData
     }
     
+    public typealias Result = Swift.Result<[FeedItem], Error>
+    
     public init(url: URL, client: HTTPClient) {
         self.url = url
         self.client = client
     }
     
-    public func load(completion: @escaping (Error) -> Void) {
+    public func load(completion: @escaping (Result) -> Void) {
         // We don't need to know or locate where the HTTPClient is, so we don't need the singleton
         // And it is best to use composition instead of singleton.
         client.get(from: url) {
             result in
             switch result {
             case .success:
-                completion(.invalidData)
+                completion(.failure(.invalidData))
             case .failure:
-                completion(.connectivity)
+                completion(.failure(.connectivity))
             }
         }
     }
