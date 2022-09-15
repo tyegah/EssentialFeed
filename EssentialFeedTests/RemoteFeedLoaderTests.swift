@@ -90,10 +90,13 @@ class RemoteFeedLoaderTests: XCTestCase {
     func test_load_deliversItemsOn200HTTPResponseWithValidJSON() {
         let (sut, client) = makeSUT()
         
-        let item1 = FeedItem(id: UUID(), description: nil, location: nil, imageURL: URL(string: "https://a-url.com")!)
+        let item1 = FeedItem(id: UUID(),
+                             description: nil,
+                             location: nil,
+                             imageURL: URL(string: "https://a-url.com")!)
         let item1JSON = [
             "id": item1.id.uuidString,
-            "imageURL": item1.imageURL.absoluteString
+            "image": item1.imageURL.absoluteString
         ]
         
         let item2 = FeedItem(id: UUID(),
@@ -104,7 +107,7 @@ class RemoteFeedLoaderTests: XCTestCase {
             "id": item2.id.uuidString,
             "description": item2.description,
             "location": item2.location,
-            "imageURL": item2.imageURL.absoluteString
+            "image": item2.imageURL.absoluteString
         ]
         
         let itemsJSON = [
