@@ -39,11 +39,6 @@ class RemoteFeedLoaderTests: XCTestCase {
         // Arrange
         let url = URL(string: "https://a-given-url.com")!
         let (sut, client) = makeSUT(url: url)
-        // Act
-        var capturedErrors = [RemoteFeedLoader.Error]()
-        sut.load() {
-            capturedErrors.append($0)
-        }
         
         // This behavior is called stubbing (stubbing error), adding behavior to a class
         // So now we're mixing the spy with a stub behavior, and we should only keep the spy as a spy.
@@ -51,10 +46,9 @@ class RemoteFeedLoaderTests: XCTestCase {
         // And we change the stubbed error with this to keep the spy as a spy, no behavior
         // And this is how the order should be. The completions should be arranged after the sut.load()
         let clientError = NSError(domain: "", code: 0)
-        client.complete(with: clientError)
-       
-        // Assert
-        XCTAssertEqual(capturedErrors, [.connectivity])
+        expect(sut, toCompleteWithError: .connectivity) {
+            client.complete(with: clientError)
+        }
     }
     
     func test_load_deliversErrorOnNon200Response() {
@@ -64,30 +58,22 @@ class RemoteFeedLoaderTests: XCTestCase {
         let samples = [199, 201, 300, 400, 500]
         
         samples.enumerated().forEach { index, code in
-            // Act
-            var capturedErrors = [RemoteFeedLoader.Error]()
-            sut.load() {
-                capturedErrors.append($0)
+            expect(sut, toCompleteWithError: .invalidData) {
+                client.complete(withStatusCode: code, at: index)
             }
-            client.complete(withStatusCode: code, at: index)
-            // Assert
-            XCTAssertEqual(capturedErrors, [.invalidData])
         }
     }
     
     func test_load_deliversErrorOn200ResponseWithInvalidJSON() {
         let (sut, client) = makeSUT()
         // Act
-        var capturedErrors = [RemoteFeedLoader.Error]()
-        sut.load() {
-            capturedErrors.append($0)
+        expect(sut, toCompleteWithError: .invalidData) {
+            // arrange
+            let invalidJSON = Data("invalidJSON".utf8)
+            client.complete(withStatusCode: 200,
+                            data: invalidJSON,
+                            at: 0)
         }
-        let invalidJSON = Data("invalidJSON".utf8)
-        client.complete(withStatusCode: 200,
-                        data: invalidJSON,
-                        at: 0)
-        // Assert
-        XCTAssertEqual(capturedErrors, [.invalidData])
     }
     
     // MARK: - Helpers
@@ -95,6 +81,19 @@ class RemoteFeedLoaderTests: XCTestCase {
         let client = HTTPClientSpy()
         let sut = RemoteFeedLoader(url: url, client: client)
         return (sut, client)
+    }
+    
+    private func expect(_ sut: RemoteFeedLoader, toCompleteWithError error: RemoteFeedLoader.Error, when action: () -> Void, file: StaticString = #file, line: UInt = #line) {
+        // Act
+        var capturedErrors = [RemoteFeedLoader.Error]()
+        sut.load() {
+            capturedErrors.append($0)
+        }
+        //arrange
+        action()
+        
+        // Assert
+        XCTAssertEqual(capturedErrors, [error], file:file, line: line)
     }
     
     // Move the test logic to a spy instead
