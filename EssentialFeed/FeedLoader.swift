@@ -22,6 +22,6 @@ public typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
 // Now we're gonna remove this line and this will break some test
 //extension LoadFeedResult: Equatable where Error:Equatable {}
 
-protocol FeedLoader {
+public protocol FeedLoader {
     func load(completion: @escaping (LoadFeedResult) -> Void)
 }
