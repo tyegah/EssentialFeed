@@ -178,17 +178,34 @@ class RemoteFeedLoaderTests: XCTestCase {
         return try! JSONSerialization.data(withJSONObject: json)
     }
     
-    private func expect(_ sut: RemoteFeedLoader, toCompleteWith result: RemoteFeedLoader.Result, when action: () -> Void, file: StaticString = #file, line: UInt = #line) {
+    private func expect(_ sut: RemoteFeedLoader,
+                        toCompleteWith expectedResult: RemoteFeedLoader.Result,
+                        when action: () -> Void,
+                        file: StaticString = #file,
+                        line: UInt = #line) {
         // Act
-        var capturedResults = [RemoteFeedLoader.Result]()
-        sut.load() {
-            capturedResults.append($0)
+        // We're now using this expectation and expectedResult, receivedResult data
+        // to avoid Equatable protocol conformance on the production code
+        // Expectation is used for async process
+        // By doing this, we do not overcomplicate the production code with unnecessary protocol comformance
+        let exp = expectation(description: "wait for load completion")
+        sut.load() { receivedResult in
+            switch (receivedResult, expectedResult) {
+            case let (.success(receivedItems), .success(expectedItems)):
+                // Assert success case
+                XCTAssertEqual(receivedItems, expectedItems, file:file, line: line)
+            case let (.failure(receivedError), .failure(expectedError)):
+                // Assert failure case
+                XCTAssertEqual(receivedError, expectedError, file:file, line: line)
+            default:
+                XCTFail("Expected \(expectedResult), received \(receivedResult) instead")
+            }
+            exp.fulfill()
         }
         //arrange
         action()
         
-        // Assert
-        XCTAssertEqual(capturedResults, [result], file:file, line: line)
+        wait(for: [exp], timeout: 1.0)
     }
     
     // Move the test logic to a spy instead
