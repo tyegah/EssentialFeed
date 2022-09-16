@@ -109,6 +109,24 @@ class RemoteFeedLoaderTests: XCTestCase {
         }
     }
     
+    // We need to make sure that when the sut instance is deallocated, the load function will not deliver any result.
+    func test_load_doesNotDeliverResultAfterSUTInstanceHasBeenDeallocated() {
+        // arrange
+        let url = URL(string: "https://a-url.com")!
+        let client = HTTPClientSpy()
+        // We need to make this sut optional to be able to set it to nil for testing purposes
+        var sut: RemoteFeedLoader? = RemoteFeedLoader(url: url, client: client)
+        
+        // act
+        var capturedResults = [RemoteFeedLoader.Result]()
+        sut?.load() {
+            capturedResults.append($0)
+        }
+        sut = nil
+        client.complete(withStatusCode: 200, data: makeItemsJSON([]))
+        XCTAssertTrue(capturedResults.isEmpty)
+    }
+    
     // MARK: - Helpers
     private func makeSUT(url: URL = URL(string: "https://a-url.com")!, file: StaticString = #file, line: UInt = #line) -> (RemoteFeedLoader, HTTPClientSpy) {
         let client = HTTPClientSpy()

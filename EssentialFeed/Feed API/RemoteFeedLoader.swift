@@ -26,8 +26,10 @@ public final class RemoteFeedLoader {
     public func load(completion: @escaping (Result) -> Void) {
         // We don't need to know or locate where the HTTPClient is, so we don't need the singleton
         // And it is best to use composition instead of singleton.
-        client.get(from: url) {
+        client.get(from: url) { [weak self]
             result in
+            // This line is important to prevent the result to be delivered after the instance is deallocated
+            guard self != nil else { return }
             switch result {
             case let .success((data, response)):
                 completion(FeedItemsMapper.map(data, response))
