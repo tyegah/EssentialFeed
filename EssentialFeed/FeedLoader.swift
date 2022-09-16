@@ -12,15 +12,16 @@ import Foundation
 // Notice that we're making this LoadFeedResult as equatable because of the tests but we actually don't have to
 // Changing production code to conform to a protocol just because of a test is not good
 
-public enum LoadFeedResult<Error: Swift.Error> {
-    case success([FeedItem])
-    case failure(Error)
-}
+//public enum LoadFeedResult<Error: Swift.Error> {
+//    case success([FeedItem])
+//    case failure(Error)
+//}
+
+public typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
 
 // Now we're gonna remove this line and this will break some test
 //extension LoadFeedResult: Equatable where Error:Equatable {}
 
 protocol FeedLoader {
-    associatedtype Error: Swift.Error
-    func load(completion: @escaping (LoadFeedResult<Error>) -> Void)
+    func load(completion: @escaping (LoadFeedResult) -> Void)
 }

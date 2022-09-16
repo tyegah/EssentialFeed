@@ -46,7 +46,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         // And we change the stubbed error with this to keep the spy as a spy, no behavior
         // And this is how the order should be. The completions should be arranged after the sut.load()
         let clientError = NSError(domain: "", code: 0)
-        expect(sut, toCompleteWith: .failure(.connectivity)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.connectivity)) {
             client.complete(with: clientError)
         }
     }
@@ -58,7 +58,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         let samples = [199, 201, 300, 400, 500]
         
         samples.enumerated().forEach { index, code in
-            expect(sut, toCompleteWith:  .failure(.invalidData)) {
+            expect(sut, toCompleteWith:  .failure(RemoteFeedLoader.Error.invalidData)) {
                 // Here we create valid json data just to check that even if valid json, if the status code is not 200, we should still deliver error
                 let json = makeItemsJSON([])
                 client.complete(withStatusCode: code, data: json, at: index)
@@ -69,7 +69,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     func test_load_deliversErrorOn200ResponseWithInvalidJSON() {
         let (sut, client) = makeSUT()
         // Act
-        expect(sut, toCompleteWith: .failure(.invalidData)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.invalidData)) {
             // arrange
             let invalidJSON = Data("invalidJSON".utf8)
             client.complete(withStatusCode: 200,
@@ -194,7 +194,7 @@ class RemoteFeedLoaderTests: XCTestCase {
             case let (.success(receivedItems), .success(expectedItems)):
                 // Assert success case
                 XCTAssertEqual(receivedItems, expectedItems, file:file, line: line)
-            case let (.failure(receivedError), .failure(expectedError)):
+            case let (.failure(receivedError as RemoteFeedLoader.Error), .failure(expectedError as RemoteFeedLoader.Error)):
                 // Assert failure case
                 XCTAssertEqual(receivedError, expectedError, file:file, line: line)
             default:
