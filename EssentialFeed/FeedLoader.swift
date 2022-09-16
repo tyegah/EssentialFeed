@@ -17,10 +17,12 @@ import Foundation
 //    case failure(Error)
 //}
 
-public typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
-
 // Now we're gonna remove this line and this will break some test
 //extension LoadFeedResult: Equatable where Error:Equatable {}
+
+// Using the typealias instead of enum because the Generic Error type is removed
+public typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
+
 
 public protocol FeedLoader {
     func load(completion: @escaping (LoadFeedResult) -> Void)
