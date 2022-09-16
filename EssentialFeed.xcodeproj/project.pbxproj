@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0D07BB6228D41F8F00678472 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D07BB6128D41F8F00678472 /* HTTPClient.swift */; };
+		0D07BB6428D41FD800678472 /* FeedItemsMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D07BB6328D41FD800678472 /* FeedItemsMapper.swift */; };
 		0D288CAD28D0499500805B95 /* EssentialFeed.docc in Sources */ = {isa = PBXBuildFile; fileRef = 0D288CAC28D0499500805B95 /* EssentialFeed.docc */; };
 		0D288CB328D0499500805B95 /* EssentialFeed.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D288CA828D0499500805B95 /* EssentialFeed.framework */; };
 		0D288CB928D0499500805B95 /* EssentialFeed.h in Headers */ = {isa = PBXBuildFile; fileRef = 0D288CAB28D0499500805B95 /* EssentialFeed.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -29,6 +30,7 @@
 
 /* Begin PBXFileReference section */
 		0D07BB6128D41F8F00678472 /* HTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
+		0D07BB6328D41FD800678472 /* FeedItemsMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedItemsMapper.swift; sourceTree = "<group>"; };
 		0D288CA828D0499500805B95 /* EssentialFeed.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = EssentialFeed.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D288CAB28D0499500805B95 /* EssentialFeed.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = EssentialFeed.h; sourceTree = "<group>"; };
 		0D288CAC28D0499500805B95 /* EssentialFeed.docc */ = {isa = PBXFileReference; lastKnownFileType = folder.documentationcatalog; path = EssentialFeed.docc; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 			children = (
 				0D07BB6128D41F8F00678472 /* HTTPClient.swift */,
 				0D288CC928D05C3B00805B95 /* RemoteFeedLoader.swift */,
+				0D07BB6328D41FD800678472 /* FeedItemsMapper.swift */,
 			);
 			path = "Feed API";
 			sourceTree = "<group>";
@@ -217,6 +220,7 @@
 				0D288CCA28D05C3B00805B95 /* RemoteFeedLoader.swift in Sources */,
 				0D07BB6228D41F8F00678472 /* HTTPClient.swift in Sources */,
 				0D288CC528D04E6600805B95 /* FeedLoader.swift in Sources */,
+				0D07BB6428D41FD800678472 /* FeedItemsMapper.swift in Sources */,
 				0D288CC328D049BB00805B95 /* FeedItem.swift in Sources */,
 				0D288CAD28D0499500805B95 /* EssentialFeed.docc in Sources */,
 			);
