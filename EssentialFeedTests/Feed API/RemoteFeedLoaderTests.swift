@@ -124,6 +124,8 @@ class RemoteFeedLoaderTests: XCTestCase {
         }
         sut = nil
         client.complete(withStatusCode: 200, data: makeItemsJSON([]))
+        
+        //assert
         XCTAssertTrue(capturedResults.isEmpty)
     }
     

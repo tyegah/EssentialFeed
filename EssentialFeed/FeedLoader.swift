@@ -7,8 +7,10 @@
 
 import Foundation
 
-typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
+// We need to make this LoadFeedResult to use Generic Type Error
+// Because we are using the LoadFeedResult on the RemoteFeedLoader
+public typealias LoadFeedResult<Error:Swift.Error> = Swift.Result<[FeedItem], Error>
 
 protocol FeedLoader {
-    func load(completion: @escaping (LoadFeedResult) -> Void)
+    func load(completion: @escaping (LoadFeedResult<Error>) -> Void)
 }
