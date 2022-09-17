@@ -22,7 +22,7 @@ class URLSessionHTTPClient {
 }
 
 class URLSessionHTTPClientTests: XCTestCase {
-    func test() {
+    func test_getFromURL_createsDataTaskWithURL() {
         // ARRANGE
         let url = URL(string: "https://a-url.com")!
         // Here we're using subclass-based mocking which would be
