@@ -15,9 +15,7 @@ class URLSessionHTTPClient {
     }
     
     func get(from url: URL) {
-        session.dataTask(with: url) { _, _, _ in
-            
-        }
+        session.dataTask(with: url) { _, _, _ in }.resume()
     }
 }
 
@@ -69,7 +67,12 @@ class URLSessionHTTPClientTests: XCTestCase {
     // But when we start mocking classes we don't own, it can become dangerous
     // Because these classes often have a bunch of methods that we don't override, and overriding the behavior can also be dangerous
     private class FakeURLSessionDataTask: URLSessionDataTask {
-        
+        // This needs to be added because it causes a crash, because we're using the resume method in the production code
+        // And this is not the best practice for tests
+        // This shows that mocking/subclassing this kind of class that we don't own is very fragile
+        override func resume() {
+            
+        }
     }
     
     // We need this spy for the 'test_getFromURL_resumesDataTaskWithURL'
