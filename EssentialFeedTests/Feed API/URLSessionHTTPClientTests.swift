@@ -20,16 +20,18 @@ class URLSessionHTTPClient {
 }
 
 class URLSessionHTTPClientTests: XCTestCase {
-    func test_getFromURL_createsDataTaskWithURL() {
-        // ARRANGE
-        let url = URL(string: "https://a-url.com")!
-        // Here we're using subclass-based mocking which would be
-        // URLSessionSpy
-        let session = URLSessionSpy()
-        let sut = URLSessionHTTPClient(session: session)
-        sut.get(from: url)
-        XCTAssertEqual(session.requestedURLs, [url])
-    }
+    
+    // This test is now removed because it is redundant with the second test
+//    func test_getFromURL_createsDataTaskWithURL() {
+//        // ARRANGE
+//        let url = URL(string: "https://a-url.com")!
+//        // Here we're using subclass-based mocking which would be
+//        // URLSessionSpy
+//        let session = URLSessionSpy()
+//        let sut = URLSessionHTTPClient(session: session)
+//        sut.get(from: url)
+//        XCTAssertEqual(session.requestedURLs, [url])
+//    }
     
     func test_getFromURL_resumesDataTaskWithURL() {
         // ARRANGE
@@ -48,7 +50,8 @@ class URLSessionHTTPClientTests: XCTestCase {
     
     // MARK: Helpers
     private class URLSessionSpy: URLSession {
-        var requestedURLs = [URL]()
+        // we remove this because it's no longer needed, because the 1st test is removed
+//        var requestedURLs = [URL]()
         var stubs = [URL: URLSessionDataTask]()
         
         func stub(url: URL, task: URLSessionDataTask) {
@@ -56,7 +59,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
   
         override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
-            requestedURLs.append(url)
+//            requestedURLs.append(url)
             // We return the stubbed data task, and if it's not available for the given url
             // we return the fake one as the default
             return stubs[url] ?? FakeURLSessionDataTask()
