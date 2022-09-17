@@ -8,9 +8,16 @@
 import XCTest
 import EssentialFeed
 
+// In order to test the URLSessionHTTPClient
+// There are 4 ways to do it
+// 1. End to end test which will be the least favored
+// 2. Subclass based mocking -> Subclassing URLSession and creating URLSessionSpy & URLSessionDataTaskSpy. This method is dangerous because we're subclassing classes that we don't own
+// 3. Protocol based mocking -. Creating our own protocol that mirrors the method in URLSession (dataTask(with url: URL,...) & URLSessionDataTask (resume()) that we're using. This method is also not very good because we're introducing protocols that we only use on tests to the production code
+// 4. URL Protocol stubbing (the best way to do this). We're intercepting url requests by using this method,a nd stub the result without actually making the real request. URLProtocol is part of the URL Loading system. It can be used with other frameworks for URL requests such as AFNetworking, etc
+
 class URLSessionHTTPClient {
-    private let session: URLSession
-    init(session: URLSession) {
+    private let session: HTTPURLSession
+    init(session: HTTPURLSession) {
         self.session = session
     }
     
@@ -21,6 +28,14 @@ class URLSessionHTTPClient {
             }
         }.resume()
     }
+}
+
+protocol HTTPURLSession {
+    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPURLSessionDataTask
+}
+
+protocol HTTPURLSessionDataTask {
+    func resume()
 }
 
 class URLSessionHTTPClientTests: XCTestCase {
@@ -79,21 +94,21 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     // MARK: Helpers
-    private class URLSessionSpy: URLSession {
+    private class URLSessionSpy: HTTPURLSession {
         // we remove this because it's no longer needed, because the 1st test is removed
 //        var requestedURLs = [URL]()
         var stubs = [URL: Stub]()
         
         struct Stub {
-            let task: URLSessionDataTask
+            let task: HTTPURLSessionDataTask
             let error:Error?
         }
         
-        func stub(url: URL, task: URLSessionDataTask = FakeURLSessionDataTask(), error: Error? = nil) {
+        func stub(url: URL, task: HTTPURLSessionDataTask = FakeURLSessionDataTask(), error: Error? = nil) {
             self.stubs[url] = Stub(task: task, error: error)
         }
   
-        override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
+        func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPURLSessionDataTask {
 //            requestedURLs.append(url)
             // We return the stubbed data task, and if it's not available for the given url
             // we return the fake one as the default
@@ -111,21 +126,21 @@ class URLSessionHTTPClientTests: XCTestCase {
     // We use this fake class because we don't actually want to hit the real url endpoint
     // But when we start mocking classes we don't own, it can become dangerous
     // Because these classes often have a bunch of methods that we don't override, and overriding the behavior can also be dangerous
-    private class FakeURLSessionDataTask: URLSessionDataTask {
+    private class FakeURLSessionDataTask: HTTPURLSessionDataTask {
         // This needs to be added because it causes a crash, because we're using the resume method in the production code
         // And this is not the best practice for tests
         // This shows that mocking/subclassing this kind of class that we don't own is very fragile
-        override func resume() {
+        func resume() {
             
         }
     }
     
     // We need this spy for the 'test_getFromURL_resumesDataTaskWithURL'
     // We do not use the fake one because this one needs to be a spy
-    private class URLSessionDataTaskSpy: URLSessionDataTask {
+    private class URLSessionDataTaskSpy: HTTPURLSessionDataTask {
         var resumesCallCount: Int = 0
         
-        override func resume() {
+        func resume() {
             resumesCallCount += 1
         }
     }
