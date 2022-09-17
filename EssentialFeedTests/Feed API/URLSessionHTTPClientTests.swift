@@ -71,7 +71,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         // URLSessionSpy
 //        let session = URLSessionSpy()
         // stubbing behavior
-        URLProtocolStub.stub(url: url, error: error)
+        URLProtocolStub.stub(url: url, data: nil, response: nil, error: error)
         let sut = URLSessionHTTPClient()
         
         // Here we start to need to see the result for the error
@@ -105,11 +105,13 @@ class URLSessionHTTPClientTests: XCTestCase {
         private static var stubs = [URL: Stub]()
         
         private struct Stub {
+            let data: Data?
+            let response: URLResponse?
             let error:Error?
         }
         
-        static func stub(url: URL, error: Error? = nil) {
-            stubs[url] = Stub(error: error)
+        static func stub(url: URL, data: Data?, response: URLResponse?, error: Error?) {
+            stubs[url] = Stub(data: data, response: response, error: error)
         }
         
         static func startInterceptingRequests() {
@@ -139,9 +141,18 @@ class URLSessionHTTPClientTests: XCTestCase {
                 return
             }
             
-            // If error is expected, then we call the client's method for failing with error
+            // If data is available, then we call the load data
+            if let data = stub.data {
+                client?.urlProtocol(self, didLoad: data)
+            }
+            
+            // If response is available, then we call the didReceive response
+            if let response = stub.response {
+                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            }
+            
+            // If error is available, then we call the client's method for failing with error
             if let error = stub.error {
-                debugPrint("ERROR \(error)")
                 client?.urlProtocol(self, didFailWithError: error)
             }
             
