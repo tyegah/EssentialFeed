@@ -33,11 +33,35 @@ class URLSessionHTTPClientTests: XCTestCase {
         XCTAssertEqual(session.requestedURLs, [url])
     }
     
+    func test_getFromURL_resumesDataTaskWithURL() {
+        // ARRANGE
+        let url = URL(string: "https://a-url.com")!
+        // Here we're using subclass-based mocking which would be
+        // URLSessionSpy
+        let session = URLSessionSpy()
+        let task = URLSessionDataTaskSpy()
+        // stubbing behavior
+        session.stub(url: url, task: task)
+        let sut = URLSessionHTTPClient(session: session)
+        sut.get(from: url)
+        XCTAssertEqual(task.resumesCallCount, 1)
+    }
+    
+    
+    // MARK: Helpers
     private class URLSessionSpy: URLSession {
         var requestedURLs = [URL]()
+        var stubs = [URL: URLSessionDataTask]()
+        
+        func stub(url: URL, task: URLSessionDataTask) {
+            self.stubs[url] = task
+        }
+  
         override func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> URLSessionDataTask {
             requestedURLs.append(url)
-            return FakeURLSessionDataTask()
+            // We return the stubbed data task, and if it's not available for the given url
+            // we return the fake one as the default
+            return stubs[url] ?? FakeURLSessionDataTask()
         }
     }
     
@@ -46,5 +70,15 @@ class URLSessionHTTPClientTests: XCTestCase {
     // Because these classes often have a bunch of methods that we don't override, and overriding the behavior can also be dangerous
     private class FakeURLSessionDataTask: URLSessionDataTask {
         
+    }
+    
+    // We need this spy for the 'test_getFromURL_resumesDataTaskWithURL'
+    // We do not use the fake one because this one needs to be a spy
+    private class URLSessionDataTaskSpy: URLSessionDataTask {
+        var resumesCallCount: Int = 0
+        
+        override func resume() {
+            resumesCallCount += 1
+        }
     }
 }
