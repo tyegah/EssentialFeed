@@ -16,8 +16,8 @@ import EssentialFeed
 // 4. URL Protocol stubbing (the best way to do this). We're intercepting url requests by using this method,a nd stub the result without actually making the real request. URLProtocol is part of the URL Loading system. It can be used with other frameworks for URL requests such as AFNetworking, etc
 
 class URLSessionHTTPClient {
-    private let session: HTTPURLSession
-    init(session: HTTPURLSession) {
+    private let session: URLSession
+    init(session: URLSession = .shared) {
         self.session = session
     }
     
@@ -28,14 +28,6 @@ class URLSessionHTTPClient {
             }
         }.resume()
     }
-}
-
-protocol HTTPURLSession {
-    func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPURLSessionDataTask
-}
-
-protocol HTTPURLSessionDataTask {
-    func resume()
 }
 
 class URLSessionHTTPClientTests: XCTestCase {
@@ -52,30 +44,35 @@ class URLSessionHTTPClientTests: XCTestCase {
 //        XCTAssertEqual(session.requestedURLs, [url])
 //    }
     
-    func test_getFromURL_resumesDataTaskWithURL() {
-        // ARRANGE
-        let url = URL(string: "https://a-url.com")!
-        // Here we're using subclass-based mocking which would be
-        // URLSessionSpy
-        let session = URLSessionSpy()
-        let task = URLSessionDataTaskSpy()
-        // stubbing behavior
-        session.stub(url: url, task: task)
-        let sut = URLSessionHTTPClient(session: session)
-        sut.get(from: url) { _ in }
-        XCTAssertEqual(task.resumesCallCount, 1)
-    }
+    // Since we are now intercepting requests through URLProtocol stubs
+    // We no longer need this test
+//    func test_getFromURL_resumesDataTaskWithURL() {
+//        // ARRANGE
+//        let url = URL(string: "https://a-url.com")!
+//        // Here we're using subclass-based mocking which would be
+//        // URLSessionSpy
+//        let session = URLSessionSpy()
+//        let task = URLSessionDataTaskSpy()
+//        // stubbing behavior
+//        session.stub(url: url, task: task)
+//        let sut = URLSessionHTTPClient(session: session)
+//        sut.get(from: url) { _ in }
+//        XCTAssertEqual(task.resumesCallCount, 1)
+//    }
     
     func test_getFromURL_failsOnRequestError() {
         // ARRANGE
+        
+        // register the URLProtocol stub to start intercepting requests
+        URLProtocolStub.startInterceptingRequests()
         let url = URL(string: "https://a-url.com")!
-        let error = NSError(domain: "", code: 0)
+        let error = NSError(domain: "any-error", code: 1)
         // Here we're using subclass-based mocking which would be
         // URLSessionSpy
-        let session = URLSessionSpy()
+//        let session = URLSessionSpy()
         // stubbing behavior
-        session.stub(url: url, error: error)
-        let sut = URLSessionHTTPClient(session: session)
+        URLProtocolStub.stub(url: url, error: error)
+        let sut = URLSessionHTTPClient()
         
         // Here we start to need to see the result for the error
         // So we change the production code which is the get(from:URL) method
@@ -83,65 +80,101 @@ class URLSessionHTTPClientTests: XCTestCase {
         let exp = expectation(description: "Wait for result")
         sut.get(from: url) { result in
             switch result {
-            case let .failure(err as NSError):
-                XCTAssertEqual(error, err)
+            case let .failure(receivedError as NSError):
+//                XCTAssertEqual(error, receivedError)
+                // we need to check for domain and code because somehow
+                // the URLProtocol returns an NSError with additional userInfo that we never add
+                XCTAssertEqual(receivedError.domain, error.domain)
+                XCTAssertEqual(receivedError.code, error.code)
             default:
                 XCTFail("Expected failure, got \(result) instead")
             }
             exp.fulfill()
         }
         wait(for: [exp], timeout: 1.0)
+        // stop intercepting requests by unregistering the URLProtocol Stub
+        URLProtocolStub.stopInterceptingRequests()
     }
     
     // MARK: Helpers
-    private class URLSessionSpy: HTTPURLSession {
-        // we remove this because it's no longer needed, because the 1st test is removed
-//        var requestedURLs = [URL]()
-        var stubs = [URL: Stub]()
+    
+    
+    // We need to note that the URLProtocol is an abstract class, it is not a protocol
+    // So here, we are actually still subclassing and not using a protocol
+    private class URLProtocolStub: URLProtocol {
+        private static var stubs = [URL: Stub]()
         
-        struct Stub {
-            let task: HTTPURLSessionDataTask
+        private struct Stub {
             let error:Error?
         }
         
-        func stub(url: URL, task: HTTPURLSessionDataTask = FakeURLSessionDataTask(), error: Error? = nil) {
-            self.stubs[url] = Stub(task: task, error: error)
+        static func stub(url: URL, error: Error? = nil) {
+            stubs[url] = Stub(error: error)
+        }
+        
+        static func startInterceptingRequests() {
+            URLProtocol.registerClass(URLProtocolStub.self)
+        }
+        
+        static func stopInterceptingRequests() {
+            URLProtocol.unregisterClass(URLProtocolStub.self)
+            stubs = [:]
         }
   
-        func dataTask(with url: URL, completionHandler: @escaping (Data?, URLResponse?, Error?) -> Void) -> HTTPURLSessionDataTask {
-//            requestedURLs.append(url)
-            // We return the stubbed data task, and if it's not available for the given url
-            // we return the fake one as the default
-//            return stubs[url] ?? FakeURLSessionDataTask()
-            
-            // Now we're adding error into the stub, we add Stub object/struct a helper
-            guard let stub = stubs[url] else {
-                fatalError("Couldn't find the task for the url \(url)")
+        // We need to override these 4 methods from URLProtocol in order to intercept URL requests
+        override class func canInit(with request: URLRequest) -> Bool {
+            guard let url = request.url else {
+                return false
             }
-            completionHandler(nil, nil, stub.error)
-            return stub.task
+            
+            return stubs[url] != nil
         }
-    }
-    
-    // We use this fake class because we don't actually want to hit the real url endpoint
-    // But when we start mocking classes we don't own, it can become dangerous
-    // Because these classes often have a bunch of methods that we don't override, and overriding the behavior can also be dangerous
-    private class FakeURLSessionDataTask: HTTPURLSessionDataTask {
-        // This needs to be added because it causes a crash, because we're using the resume method in the production code
-        // And this is not the best practice for tests
-        // This shows that mocking/subclassing this kind of class that we don't own is very fragile
-        func resume() {
+        
+        override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+            return request
+        }
+        
+        override func startLoading() {
+            guard let url = request.url, let stub = URLProtocolStub.stubs[url] else {
+                return
+            }
+            
+            // If error is expected, then we call the client's method for failing with error
+            if let error = stub.error {
+                debugPrint("ERROR \(error)")
+                client?.urlProtocol(self, didFailWithError: error)
+            }
+            
+            // Always call this method because we need to always finish loading the request
+            client?.urlProtocolDidFinishLoading(self)
+        }
+        
+        // We need to implement this because otherwise it will cause a crash at runtime
+        // But we don't have anything to put inside this method
+        override func stopLoading() {
             
         }
     }
     
-    // We need this spy for the 'test_getFromURL_resumesDataTaskWithURL'
-    // We do not use the fake one because this one needs to be a spy
-    private class URLSessionDataTaskSpy: HTTPURLSessionDataTask {
-        var resumesCallCount: Int = 0
-        
-        func resume() {
-            resumesCallCount += 1
-        }
-    }
+//    // We use this fake class because we don't actually want to hit the real url endpoint
+//    // But when we start mocking classes we don't own, it can become dangerous
+//    // Because these classes often have a bunch of methods that we don't override, and overriding the behavior can also be dangerous
+//    private class FakeURLSessionDataTask: HTTPURLSessionDataTask {
+//        // This needs to be added because it causes a crash, because we're using the resume method in the production code
+//        // And this is not the best practice for tests
+//        // This shows that mocking/subclassing this kind of class that we don't own is very fragile
+//        func resume() {
+//
+//        }
+//    }
+//
+//    // We need this spy for the 'test_getFromURL_resumesDataTaskWithURL'
+//    // We do not use the fake one because this one needs to be a spy
+//    private class URLSessionDataTaskSpy: HTTPURLSessionDataTask {
+//        var resumesCallCount: Int = 0
+//
+//        func resume() {
+//            resumesCallCount += 1
+//        }
+//    }
 }
