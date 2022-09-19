@@ -21,10 +21,15 @@ class URLSessionHTTPClient {
         self.session = session
     }
     
+    struct UnexpectedValuesRepresentation:Error {}
+    
     func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
         session.dataTask(with: url) { _, _, error in
             if let error = error {
                 completion(.failure(error))
+            }
+            else {
+                completion(.failure(UnexpectedValuesRepresentation()))
             }
         }.resume()
     }
@@ -117,6 +122,31 @@ class URLSessionHTTPClientTests: XCTestCase {
                 // the URLProtocol returns an NSError with additional userInfo that we never add
                 XCTAssertEqual(receivedError.domain, error.domain)
                 XCTAssertEqual(receivedError.code, error.code)
+            default:
+                XCTFail("Expected failure \(error), got \(result) instead")
+            }
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+        // stop intercepting requests by unregistering the URLProtocol Stub
+//        URLProtocolStub.stopInterceptingRequests()
+    }
+    
+    // This is to test all the edge cases/possibility for URLSession data (Data?, URLResponse?, Error?)
+    // This one is to handle the nil data, nil URLResponse and nil Error
+    func test_getFromURL_failsOnAllNilValues() {
+        // ARRANGE
+        URLProtocolStub.stub(data: nil, response: nil, error: nil)
+        
+        let exp = expectation(description: "Wait for result")
+        makeSUT().get(from: anyURL()) { result in
+            switch result {
+                // Because there is no error here
+                // We only need to make sure that it will cause failure
+                // We do not care about the type of error thrown in this case
+                // We choose not to care because this is an invalid scenario
+            case .failure:
+                break
             default:
                 XCTFail("Expected failure, got \(result) instead")
             }
