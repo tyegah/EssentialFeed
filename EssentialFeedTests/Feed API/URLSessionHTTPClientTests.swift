@@ -90,7 +90,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
         
         // ACT
-        URLSessionHTTPClient().get(from: url) { _ in }
+        makeSUT().get(from: url) { _ in }
         
         wait(for: [exp], timeout: 1.0)
     }
@@ -105,13 +105,12 @@ class URLSessionHTTPClientTests: XCTestCase {
 //        let session = URLSessionSpy()
         // stubbing behavior
         URLProtocolStub.stub(data: nil, response: nil, error: error)
-        let sut = URLSessionHTTPClient()
         
         // Here we start to need to see the result for the error
         // So we change the production code which is the get(from:URL) method
         // To have completion handler to get the result
         let exp = expectation(description: "Wait for result")
-        sut.get(from: url) { result in
+        makeSUT().get(from: url) { result in
             switch result {
             case let .failure(receivedError as NSError):
 //                XCTAssertEqual(error, receivedError)
@@ -130,7 +129,11 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     // MARK: Helpers
-    
+    // Move the SUT creation to a helper/factory method to prevent breaking changes on the tests
+    // For example when the instance will start having dependencies upon its creation, etc
+    private func makeSUT() -> URLSessionHTTPClient {
+        return URLSessionHTTPClient()
+    }
     
     // We need to note that the URLProtocol is an abstract class, it is not a protocol
     // So here, we are actually still subclassing and not using a protocol
