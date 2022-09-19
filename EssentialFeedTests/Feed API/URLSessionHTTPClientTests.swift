@@ -137,13 +137,6 @@ class URLSessionHTTPClientTests: XCTestCase {
         return sut
     }
     
-    private func trackForMemoryLeaks(_ instance: AnyObject, file: StaticString = #file, line: UInt = #line) {
-        // The instance needs to be weak to avoid retain cycle inside the teardown block
-        addTeardownBlock { [weak instance] in
-            XCTAssertNil(instance, "Instance should have been deallocated. Potential memory leak.", file: file, line: line)
-        }
-    }
-    
     // We need to note that the URLProtocol is an abstract class, it is not a protocol
     // So here, we are actually still subclassing and not using a protocol
     private class URLProtocolStub: URLProtocol {
