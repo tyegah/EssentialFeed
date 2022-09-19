@@ -60,15 +60,29 @@ class URLSessionHTTPClientTests: XCTestCase {
 //        XCTAssertEqual(task.resumesCallCount, 1)
 //    }
     
+    // Move the start/stop intercepting request to this setup/teardown methods
+    // Because these methods will be called every time each test is run
+    override func setUp() {
+        super.setUp()
+        // register the URLProtocol stub to start intercepting requests
+        URLProtocolStub.startInterceptingRequests()
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        // stop intercepting requests by unregistering the URLProtocol Stub
+        URLProtocolStub.stopInterceptingRequests()
+    }
+    
     // Previously, We were putting the URL checking concerns inside the URLProtocol Stub and it's not a good practice
     // So we move the concern to a separate test that specifically checks for the URL
     func test_getFromURL_performsGETRequestWithURL() {
         // ARRANGE
-        URLProtocolStub.startInterceptingRequests()
         let url = URL(string:"https://a-url.com")!
         // ASSERT
         // Async assertion needs expectation
         let exp = expectation(description: "Wait for request")
+        // Any data like body and params can be observed through this observer method
         URLProtocolStub.observeRequests { request in
             XCTAssertEqual(request.url, url)
             XCTAssertEqual(request.httpMethod, "GET")
@@ -79,14 +93,11 @@ class URLSessionHTTPClientTests: XCTestCase {
         URLSessionHTTPClient().get(from: url) { _ in }
         
         wait(for: [exp], timeout: 1.0)
-        URLProtocolStub.stopInterceptingRequests()
     }
     
     func test_getFromURL_failsOnRequestError() {
         // ARRANGE
-        
-        // register the URLProtocol stub to start intercepting requests
-        URLProtocolStub.startInterceptingRequests()
+//        URLProtocolStub.startInterceptingRequests()
         let url = URL(string: "https://a-url.com")!
         let error = NSError(domain: "any-error", code: 1)
         // Here we're using subclass-based mocking which would be
@@ -115,7 +126,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
         wait(for: [exp], timeout: 1.0)
         // stop intercepting requests by unregistering the URLProtocol Stub
-        URLProtocolStub.stopInterceptingRequests()
+//        URLProtocolStub.stopInterceptingRequests()
     }
     
     // MARK: Helpers
