@@ -60,6 +60,28 @@ class URLSessionHTTPClientTests: XCTestCase {
 //        XCTAssertEqual(task.resumesCallCount, 1)
 //    }
     
+    // Previously, We were putting the URL checking concerns inside the URLProtocol Stub and it's not a good practice
+    // So we move the concern to a separate test that specifically checks for the URL
+    func test_getFromURL_performsGETRequestWithURL() {
+        // ARRANGE
+        URLProtocolStub.startInterceptingRequests()
+        let url = URL(string:"https://a-url.com")!
+        // ASSERT
+        // Async assertion needs expectation
+        let exp = expectation(description: "Wait for request")
+        URLProtocolStub.observeRequests { request in
+            XCTAssertEqual(request.url, url)
+            XCTAssertEqual(request.httpMethod, "GET")
+            exp.fulfill()
+        }
+        
+        // ACT
+        URLSessionHTTPClient().get(from: url) { _ in }
+        
+        wait(for: [exp], timeout: 1.0)
+        URLProtocolStub.stopInterceptingRequests()
+    }
+    
     func test_getFromURL_failsOnRequestError() {
         // ARRANGE
         
@@ -103,6 +125,7 @@ class URLSessionHTTPClientTests: XCTestCase {
     // So here, we are actually still subclassing and not using a protocol
     private class URLProtocolStub: URLProtocol {
         private static var stub: Stub?
+        private static var requestObserver: ((URLRequest) -> Void)?
         
         private struct Stub {
             let data: Data?
@@ -120,7 +143,13 @@ class URLSessionHTTPClientTests: XCTestCase {
         
         static func stopInterceptingRequests() {
             URLProtocol.unregisterClass(URLProtocolStub.self)
+            // Do not forget to reset all the variables on this method
             stub = nil
+            requestObserver = nil
+        }
+        
+        static func observeRequests(observer: @escaping (URLRequest) -> Void) {
+            requestObserver = observer
         }
   
         // We need to override these 4 methods from URLProtocol in order to intercept URL requests
@@ -131,6 +160,9 @@ class URLSessionHTTPClientTests: XCTestCase {
 //            }
 //
 //            return stubs[url] != nil
+            
+            // Invoke the observer and pass the request (for testing URL purpose)
+            requestObserver?(request)
             return true
         }
         
