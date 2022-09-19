@@ -78,7 +78,7 @@ class URLSessionHTTPClientTests: XCTestCase {
     // So we move the concern to a separate test that specifically checks for the URL
     func test_getFromURL_performsGETRequestWithURL() {
         // ARRANGE
-        let url = URL(string:"https://a-url.com")!
+        let url = anyURL()
         // ASSERT
         // Async assertion needs expectation
         let exp = expectation(description: "Wait for request")
@@ -98,7 +98,6 @@ class URLSessionHTTPClientTests: XCTestCase {
     func test_getFromURL_failsOnRequestError() {
         // ARRANGE
 //        URLProtocolStub.startInterceptingRequests()
-        let url = URL(string: "https://a-url.com")!
         let error = NSError(domain: "any-error", code: 1)
         // Here we're using subclass-based mocking which would be
         // URLSessionSpy
@@ -110,7 +109,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         // So we change the production code which is the get(from:URL) method
         // To have completion handler to get the result
         let exp = expectation(description: "Wait for result")
-        makeSUT().get(from: url) { result in
+        makeSUT().get(from: anyURL()) { result in
             switch result {
             case let .failure(receivedError as NSError):
 //                XCTAssertEqual(error, receivedError)
@@ -135,6 +134,10 @@ class URLSessionHTTPClientTests: XCTestCase {
         let sut = URLSessionHTTPClient()
         trackForMemoryLeaks(sut, file: file, line: line)
         return sut
+    }
+    
+    private func anyURL() -> URL {
+        return URL(string: "https://any-url.com")!
     }
     
     // We need to note that the URLProtocol is an abstract class, it is not a protocol
