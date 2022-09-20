@@ -15,39 +15,6 @@ import EssentialFeed
 // 3. Protocol based mocking -. Creating our own protocol that mirrors the method in URLSession (dataTask(with url: URL,...) & URLSessionDataTask (resume()) that we're using. This method is also not very good because we're introducing protocols that we only use on tests to the production code
 // 4. URL Protocol stubbing (the best way to do this). We're intercepting url requests by using this method,a nd stub the result without actually making the real request. URLProtocol is part of the URL Loading system. It can be used with other frameworks for URL requests such as AFNetworking, etc
 
-class URLSessionHTTPClient:HTTPClient {
-    private let session: URLSession
-    init(session: URLSession = .shared) {
-        self.session = session
-    }
-    
-    struct UnexpectedValuesRepresentation:Error {}
-    
-    func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
-        session.dataTask(with: url) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-            }
-            // This data.count > 0 is an additional condition because it turns out that the URLProtocol/URLSession
-            // Will return 0 bytes of data even if on the test we set the data to nil.
-            // This is affecting the 'test_getFromURL_failsOnAllInvalidRepresentationCases' and cause it to fail
-            // That's why we add this condition to make it pass
-//            else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
-//                completion(.success((data, response)))
-//            }
-            
-            // This is how it is after we add one more test to handle the nil data that turns out to be empty data on URL loading system
-            // No more data.count needed
-            else if let data = data, let response = response as? HTTPURLResponse {
-                completion(.success((data, response)))
-            }
-            else {
-                completion(.failure(UnexpectedValuesRepresentation()))
-            }
-        }.resume()
-    }
-}
-
 class URLSessionHTTPClientTests: XCTestCase {
     
     // This test is now removed because it is redundant with the second test
