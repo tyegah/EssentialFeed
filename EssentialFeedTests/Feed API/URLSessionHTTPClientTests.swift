@@ -15,7 +15,7 @@ import EssentialFeed
 // 3. Protocol based mocking -. Creating our own protocol that mirrors the method in URLSession (dataTask(with url: URL,...) & URLSessionDataTask (resume()) that we're using. This method is also not very good because we're introducing protocols that we only use on tests to the production code
 // 4. URL Protocol stubbing (the best way to do this). We're intercepting url requests by using this method,a nd stub the result without actually making the real request. URLProtocol is part of the URL Loading system. It can be used with other frameworks for URL requests such as AFNetworking, etc
 
-class URLSessionHTTPClient {
+class URLSessionHTTPClient:HTTPClient {
     private let session: URLSession
     init(session: URLSession = .shared) {
         self.session = session
@@ -223,7 +223,7 @@ class URLSessionHTTPClientTests: XCTestCase {
     // MARK: Helpers
     // Move the SUT creation to a helper/factory method to prevent breaking changes on the tests
     // For example when the instance will start having dependencies upon its creation, etc
-    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> URLSessionHTTPClient {
+    private func makeSUT(file: StaticString = #file, line: UInt = #line) -> HTTPClient {
         let sut = URLSessionHTTPClient()
         trackForMemoryLeaks(sut, file: file, line: line)
         return sut
