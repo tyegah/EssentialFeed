@@ -32,7 +32,13 @@ class URLSessionHTTPClient {
             // Will return 0 bytes of data even if on the test we set the data to nil.
             // This is affecting the 'test_getFromURL_failsOnAllInvalidRepresentationCases' and cause it to fail
             // That's why we add this condition to make it pass
-            else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+//            else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+//                completion(.success((data, response)))
+//            }
+            
+            // This is how it is after we add one more test to handle the nil data that turns out to be empty data on URL loading system
+            // No more data.count needed
+            else if let data = data, let response = response as? HTTPURLResponse {
                 completion(.success((data, response)))
             }
             else {
@@ -160,7 +166,10 @@ class URLSessionHTTPClientTests: XCTestCase {
         // REFACTORED VERSION
         XCTAssertNotNil(resultErrorFor(data: nil, response: nil, error: nil))
         XCTAssertNotNil(resultErrorFor(data: nil, response: nonHTTPURLResponse(), error: nil))
-        XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPURLResponse(), error: nil))
+        // This invalid case (nil data, response, and nil error) is moved to its own test
+        // test_getFromURL_succeedsOnHTTPURLResponseWithEmptyData
+        // Because it turns out that the URL Loading system always returns data (0 bytes) even if we set it to nil
+//        XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPURLResponse(), error: nil))
         XCTAssertNotNil(resultErrorFor(data: anyData(), response: nil, error: anyNSError()))
         XCTAssertNotNil(resultErrorFor(data: nil, response: nonHTTPURLResponse(), error: anyNSError()))
         XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPURLResponse(), error: anyNSError()))
@@ -196,6 +205,25 @@ class URLSessionHTTPClientTests: XCTestCase {
             switch result {
             case let .success((receivedData, receivedResponse)):
                 XCTAssertEqual(receivedData, data)
+                XCTAssertEqual(receivedResponse.url, response.url)
+                XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
+            default:
+                XCTFail("Expected success, got \(result) instead")
+            }
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
+    }
+    
+    func test_getFromURL_succeedsOnHTTPURLResponseWithEmptyData() {
+        let response = anyHTTPURLResponse()
+        URLProtocolStub.stub(data: nil, response: response, error: nil)
+        let exp = expectation(description: "Wait for completion")
+        makeSUT().get(from: anyURL()) { result in
+            let emptyData = Data()
+            switch result {
+            case let .success((receivedData, receivedResponse)):
+                XCTAssertEqual(receivedData, emptyData)
                 XCTAssertEqual(receivedResponse.url, response.url)
                 XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
             default:
