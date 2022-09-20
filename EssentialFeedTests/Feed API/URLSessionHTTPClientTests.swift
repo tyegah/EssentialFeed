@@ -24,9 +24,16 @@ class URLSessionHTTPClient {
     struct UnexpectedValuesRepresentation:Error {}
     
     func get(from url: URL, completion: @escaping (HTTPClientResult) -> Void) {
-        session.dataTask(with: url) { _, _, error in
+        session.dataTask(with: url) { data, response, error in
             if let error = error {
                 completion(.failure(error))
+            }
+            // This data.count > 0 is an additional condition because it turns out that the URLProtocol/URLSession
+            // Will return 0 bytes of data even if on the test we set the data to nil.
+            // This is affecting the 'test_getFromURL_failsOnAllInvalidRepresentationCases' and cause it to fail
+            // That's why we add this condition to make it pass
+            else if let data = data, data.count > 0, let response = response as? HTTPURLResponse {
+                completion(.success((data, response)))
             }
             else {
                 completion(.failure(UnexpectedValuesRepresentation()))
@@ -178,6 +185,25 @@ class URLSessionHTTPClientTests: XCTestCase {
 //            exp.fulfill()
 //        }
 //        wait(for: [exp], timeout: 1.0)
+    }
+    
+    func test_getFromURL_succeedsOnHTTPURLResponseWithData() {
+        let data = anyData()
+        let response = anyHTTPURLResponse()
+        URLProtocolStub.stub(data: data, response: response, error: nil)
+        let exp = expectation(description: "Wait for completion")
+        makeSUT().get(from: anyURL()) { result in
+            switch result {
+            case let .success((receivedData, receivedResponse)):
+                XCTAssertEqual(receivedData, data)
+                XCTAssertEqual(receivedResponse.url, response.url)
+                XCTAssertEqual(receivedResponse.statusCode, response.statusCode)
+            default:
+                XCTFail("Expected success, got \(result) instead")
+            }
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1.0)
     }
     
     // MARK: Helpers
