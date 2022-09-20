@@ -315,7 +315,12 @@ class URLSessionHTTPClientTests: XCTestCase {
 //            return stubs[url] != nil
             
             // Invoke the observer and pass the request (for testing URL purpose)
-            requestObserver?(request)
+            
+            
+            //** This request observer is causing the URLProtocol to finish even before the process is done
+            //** Thus causing the data races when the thread sanitizer is turned on
+            //** SO, we move this line to the startLoading() method
+//            requestObserver?(request)
             return true
         }
         
@@ -324,6 +329,14 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
         
         override func startLoading() {
+            //** This is added to fix the data races problem when running tests with thread sanitizer
+            //** it makes sure that every request finished before the test methods that uses URLProtocol stub returns
+            //** So we don't have running background threads concurrently with other test methods
+            if let requestObserver = URLProtocolStub.requestObserver {
+                client?.urlProtocolDidFinishLoading(self)
+                return requestObserver(request)
+            }
+            
             guard let stub = URLProtocolStub.stub else {
                 return
             }
