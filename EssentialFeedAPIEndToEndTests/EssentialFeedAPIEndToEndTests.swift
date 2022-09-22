@@ -32,7 +32,8 @@ class EssentialFeedAPIEndToEndTests: XCTestCase {
     
     private func getFeedResult(file: StaticString = #file, line: UInt = #line) -> LoadFeedResult? {
         let testServerURL = URL(string: "https://essentialdeveloper.com/feed-case-study/test-api/feed")!
-        let client = URLSessionHTTPClient()
+        // We're using .ephemeral URLSession because it doesn't store caches and guarantees that every time the test is run, it will always hit the server and not get data from the cache folder (/Users/tyegah/Library/Caches/com.apple.dt.xctest.tool)
+        let client = URLSessionHTTPClient(session: URLSession(configuration: .ephemeral))
         let loader = RemoteFeedLoader(url: testServerURL, client: client)
         trackForMemoryLeaks(client, file: file, line: line)
         trackForMemoryLeaks(loader, file: file, line: line)
