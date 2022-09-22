@@ -17,6 +17,7 @@
 		0D288CC528D04E6600805B95 /* FeedLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D288CC428D04E6600805B95 /* FeedLoader.swift */; };
 		0D288CC728D04F5600805B95 /* RemoteFeedLoaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D288CC628D04F5600805B95 /* RemoteFeedLoaderTests.swift */; };
 		0D288CCA28D05C3B00805B95 /* RemoteFeedLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D288CC928D05C3B00805B95 /* RemoteFeedLoader.swift */; };
+		0D780E9428DC9FBB00A22AC8 /* CacheFeedUseCaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D780E9328DC9FBB00A22AC8 /* CacheFeedUseCaseTests.swift */; };
 		0DFA2F8828D8B2D800125BAB /* XCTestCase+MemoryLeakTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFA2F8728D8B2D800125BAB /* XCTestCase+MemoryLeakTracking.swift */; };
 		0DFA2F8A28D994C600125BAB /* URLSessionHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFA2F8928D994C600125BAB /* URLSessionHTTPClient.swift */; };
 		0DFA2F9228D9984E00125BAB /* EssentialFeedAPIEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFA2F9128D9984E00125BAB /* EssentialFeedAPIEndToEndTests.swift */; };
@@ -53,6 +54,7 @@
 		0D288CC428D04E6600805B95 /* FeedLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedLoader.swift; sourceTree = "<group>"; };
 		0D288CC628D04F5600805B95 /* RemoteFeedLoaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFeedLoaderTests.swift; sourceTree = "<group>"; };
 		0D288CC928D05C3B00805B95 /* RemoteFeedLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteFeedLoader.swift; sourceTree = "<group>"; };
+		0D780E9328DC9FBB00A22AC8 /* CacheFeedUseCaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheFeedUseCaseTests.swift; sourceTree = "<group>"; };
 		0DFA2F8728D8B2D800125BAB /* XCTestCase+MemoryLeakTracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "XCTestCase+MemoryLeakTracking.swift"; sourceTree = "<group>"; };
 		0DFA2F8928D994C600125BAB /* URLSessionHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionHTTPClient.swift; sourceTree = "<group>"; };
 		0DFA2F8F28D9984E00125BAB /* EssentialFeedAPIEndToEndTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EssentialFeedAPIEndToEndTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,6 +121,7 @@
 		0D288CAA28D0499500805B95 /* EssentialFeed */ = {
 			isa = PBXGroup;
 			children = (
+				0D780E9128DC9F9A00A22AC8 /* Feed Cache */,
 				0D288CC828D05C3000805B95 /* Feed API */,
 				0D288CAB28D0499500805B95 /* EssentialFeed.h */,
 				0D288CAC28D0499500805B95 /* EssentialFeed.docc */,
@@ -131,6 +134,7 @@
 		0D288CB628D0499500805B95 /* EssentialFeedTests */ = {
 			isa = PBXGroup;
 			children = (
+				0D780E9228DC9FA800A22AC8 /* Feed Cache */,
 				0D07BB6528D4266600678472 /* Feed API */,
 			);
 			path = EssentialFeedTests;
@@ -145,6 +149,21 @@
 				0DFA2F8928D994C600125BAB /* URLSessionHTTPClient.swift */,
 			);
 			path = "Feed API";
+			sourceTree = "<group>";
+		};
+		0D780E9128DC9F9A00A22AC8 /* Feed Cache */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Feed Cache";
+			sourceTree = "<group>";
+		};
+		0D780E9228DC9FA800A22AC8 /* Feed Cache */ = {
+			isa = PBXGroup;
+			children = (
+				0D780E9328DC9FBB00A22AC8 /* CacheFeedUseCaseTests.swift */,
+			);
+			path = "Feed Cache";
 			sourceTree = "<group>";
 		};
 		0DFA2F8628D8B2BA00125BAB /* Helpers */ = {
@@ -317,6 +336,7 @@
 			files = (
 				0D288CC728D04F5600805B95 /* RemoteFeedLoaderTests.swift in Sources */,
 				0D07BB6728D600DC00678472 /* URLSessionHTTPClientTests.swift in Sources */,
+				0D780E9428DC9FBB00A22AC8 /* CacheFeedUseCaseTests.swift in Sources */,
 				0DFA2F8828D8B2D800125BAB /* XCTestCase+MemoryLeakTracking.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
