@@ -33,57 +33,14 @@ class LocalFeedLoader {
     }
 }
 
+//** The approach in this TDD is that we didn't define the interface in the beginning (so we didn't create a spy) and uses a class instead. In the end, we're extracting the methods that this class has to create the interface and change the class (FeedStore class) into a spy.
 
-// Collaborator
-class FeedStore {
+protocol FeedStore {
     typealias DeletionCompletion = (Error?) -> Void
     typealias InsertionCompletion = (Error?) -> Void
-//    var deleteCachedFeedCallCount = 0
-    var deletionCompletions = [DeletionCompletion]()
-    var insertionCompletions = [InsertionCompletion]()
-//    var insertions = [(items:[FeedItem], timeStamp: Date)]()
-    //** Because the LocalFeedLoader is calling multiple methods of the FeedStore
-    //** and they need to be in the right order
-    //** We can actually merged the deletion and insertion checks using one variable to guarantee that the received messages are right (which methods are invoke with which values, and in which order)
-    //** Thus, we create this variable
-    var receivedMessages = [ReceivedMessage]()
-    
-    enum ReceivedMessage:Equatable {
-        case deleteCacheFeed
-        case insert([FeedItem], Date)
-    }
-    
-    // delete
-    func deleteCachedFeed(completion: @escaping DeletionCompletion) {
-//        deleteCachedFeedCallCount += 1
-        deletionCompletions.append(completion)
-        receivedMessages.append(.deleteCacheFeed)
-    }
-    
-    func completeDeletion(with error: Error, at index:Int = 0) {
-        deletionCompletions[index](error)
-    }
-    
-    func completeDeletionSuccessfully(at index:Int = 0) {
-        deletionCompletions[index](nil)
-    }
-    
-    // insert
-    func insert(_ items:[FeedItem], timeStamp: Date, completion: @escaping InsertionCompletion) {
-        insertionCompletions.append(completion)
-        receivedMessages.append(.insert(items, timeStamp))
-    }
-    
-    func completeInsertion(with error: Error, at index: Int = 0) {
-        insertionCompletions[index](error)
-    }
-    
-    func completeInsertionSuccessfully(at index:Int = 0) {
-        insertionCompletions[index](nil)
-    }
-    
+    func deleteCachedFeed(completion: @escaping DeletionCompletion)
+    func insert(_ items:[FeedItem], timeStamp: Date, completion: @escaping InsertionCompletion)
 }
-
 
 // These tests is driven by the Cache Feed Use Case from BDD specs
 class CacheFeedUseCaseTests: XCTestCase {
@@ -215,15 +172,15 @@ class CacheFeedUseCaseTests: XCTestCase {
     
     // MARK: Helpers
     
-    private func makeSUT(currentDate: @escaping () -> Date = Date.init, file: StaticString = #file, line: UInt = #line) -> (sut: LocalFeedLoader, store: FeedStore) {
-        let store = FeedStore()
+    private func makeSUT(currentDate: @escaping () -> Date = Date.init, file: StaticString = #file, line: UInt = #line) -> (sut: LocalFeedLoader, store: FeedStoreSpy) {
+        let store = FeedStoreSpy()
         let sut = LocalFeedLoader(store:store, currentDate: currentDate)
         trackForMemoryLeaks(store, file: file, line: line)
         trackForMemoryLeaks(sut, file: file, line: line)
         return (sut, store)
     }
     
-    private func expect(_ sut: LocalFeedLoader, toCompleteWith expectedError:Error?, when action: () -> Void) {
+    private func expect(_ sut: LocalFeedLoader, toCompleteWith expectedError:Error?, when action: () -> Void, file: StaticString = #file, line: UInt = #line) {
         var receivedError:Error?
         let exp = expectation(description: "Wait for completion")
         sut.save([uniqueItem()]) { error in
@@ -233,7 +190,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         action()
         wait(for: [exp], timeout: 1.0)
         // Assert
-        XCTAssertEqual(expectedError as NSError?, receivedError as NSError?)
+        XCTAssertEqual(expectedError as NSError?, receivedError as NSError?,file: file, line: line)
     }
     
     private func uniqueItem() -> FeedItem {
@@ -247,4 +204,57 @@ class CacheFeedUseCaseTests: XCTestCase {
     private func anyNSError() -> NSError {
         return NSError(domain: "any error", code: 1)
     }
+    
+    // Collaborator
+    //** This class (FeedStore class) is created since the beginning and we're not using spy to test drive
+    //** Later on it will be changed into FeedStoreSpy
+    //** Then it's moved into the test class
+    private class FeedStoreSpy: FeedStore {
+     
+    //    var deleteCachedFeedCallCount = 0
+        var deletionCompletions = [DeletionCompletion]()
+        var insertionCompletions = [InsertionCompletion]()
+    //    var insertions = [(items:[FeedItem], timeStamp: Date)]()
+        //** Because the LocalFeedLoader is calling multiple methods of the FeedStore
+        //** and they need to be in the right order
+        //** We can actually merged the deletion and insertion checks using one variable to guarantee that the received messages are right (which methods are invoke with which values, and in which order)
+        //** Thus, we create this variable
+        var receivedMessages = [ReceivedMessage]()
+        
+        enum ReceivedMessage:Equatable {
+            case deleteCacheFeed
+            case insert([FeedItem], Date)
+        }
+        
+        // delete
+        func deleteCachedFeed(completion: @escaping DeletionCompletion) {
+    //        deleteCachedFeedCallCount += 1
+            deletionCompletions.append(completion)
+            receivedMessages.append(.deleteCacheFeed)
+        }
+        
+        func completeDeletion(with error: Error, at index:Int = 0) {
+            deletionCompletions[index](error)
+        }
+        
+        func completeDeletionSuccessfully(at index:Int = 0) {
+            deletionCompletions[index](nil)
+        }
+        
+        // insert
+        func insert(_ items:[FeedItem], timeStamp: Date, completion: @escaping InsertionCompletion) {
+            insertionCompletions.append(completion)
+            receivedMessages.append(.insert(items, timeStamp))
+        }
+        
+        func completeInsertion(with error: Error, at index: Int = 0) {
+            insertionCompletions[index](error)
+        }
+        
+        func completeInsertionSuccessfully(at index:Int = 0) {
+            insertionCompletions[index](nil)
+        }
+        
+    }
+
 }
