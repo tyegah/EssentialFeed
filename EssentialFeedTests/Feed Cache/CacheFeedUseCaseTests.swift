@@ -35,7 +35,6 @@ class LocalFeedLoader {
 class FeedStore {
     typealias DeletionCompletion = (Error?) -> Void
     var deleteCachedFeedCallCount = 0
-    var insertCallCount = 0
     var deletionCompletions = [DeletionCompletion]()
     var insertions = [(items:[FeedItem], timeStamp: Date)]()
     func deleteCachedFeed(completion: @escaping DeletionCompletion) {
@@ -52,7 +51,6 @@ class FeedStore {
     }
     
     func insert(_ items:[FeedItem], timeStamp: Date) {
-        insertCallCount += 1
         insertions.append((items, timeStamp))
     }
 }
@@ -83,21 +81,22 @@ class CacheFeedUseCaseTests: XCTestCase {
         store.completeDeletion(with:deletionError)
         
         // Assert
-        XCTAssertEqual(store.insertCallCount, 0)
+        XCTAssertEqual(store.insertions.count, 0)
     }
     
-    func test_save_requestsCacheInsertionOnSuccessfulDeletion() {
-        // arrange
-        let items = [uniqueItem(), uniqueItem()]
-        let (sut, store) = makeSUT()
-        
-        // act
-        sut.save(items)
-        store.completeDeletionSuccessfully()
-        
-        // Assert
-        XCTAssertEqual(store.insertCallCount, 1)
-    }
+    //** This test is removed because it is now redundant (it's already covered on the next test)
+//    func test_save_requestsCacheInsertionOnSuccessfulDeletion() {
+//        // arrange
+//        let items = [uniqueItem(), uniqueItem()]
+//        let (sut, store) = makeSUT()
+//
+//        // act
+//        sut.save(items)
+//        store.completeDeletionSuccessfully()
+//
+//        // Assert
+//        XCTAssertEqual(store.insertCallCount, 1)
+//    }
     
     func test_save_requestsCacheInsertionWithTimeStampOnSuccessfulDeletion() {
         // arrange
