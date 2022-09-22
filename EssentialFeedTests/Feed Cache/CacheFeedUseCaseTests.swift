@@ -21,8 +21,9 @@ class LocalFeedLoader {
         self.currentDate = currentDate
     }
     
-    func save(_ items: [FeedItem]) {
+    func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
         store.deleteCachedFeed { [unowned self] error in
+            completion(error)
             if error == nil {
                 self.store.insert(items, timeStamp: self.currentDate())
             }
@@ -78,7 +79,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let items = [uniqueItem(), uniqueItem()]
         let (sut, store) = makeSUT()
         // act
-        sut.save(items)
+        sut.save(items) { _ in }
         XCTAssertEqual(store.receivedMessages, [.deleteCacheFeed])
     }
     
@@ -89,7 +90,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let deletionError = anyNSError()
         
         // act
-        sut.save(items)
+        sut.save(items) { _ in }
         store.completeDeletion(with:deletionError)
         
         // Assert
@@ -117,7 +118,7 @@ class CacheFeedUseCaseTests: XCTestCase {
         let (sut, store) = makeSUT(currentDate: { timeStamp })
         
         // act
-        sut.save(items)
+        sut.save(items) { _ in }
         store.completeDeletionSuccessfully()
         
         // Assert
@@ -126,6 +127,23 @@ class CacheFeedUseCaseTests: XCTestCase {
 //        XCTAssertEqual(store.insertions.count, 1)
 //        XCTAssertEqual(store.insertions.first?.items, items)
 //        XCTAssertEqual(store.insertions.first?.timeStamp, timeStamp)
+    }
+    
+    func test_save_failsOnDeletionError() {
+        // arrange
+        let timeStamp = Date()
+        let items = [uniqueItem(), uniqueItem()]
+        let (sut, store) = makeSUT(currentDate: { timeStamp })
+        let deletionError = anyNSError()
+        // act
+        var receivedError:Error?
+        sut.save(items) { error in
+            receivedError = error
+        }
+        store.completeDeletion(with: deletionError)
+        
+        // Assert
+        XCTAssertEqual(deletionError, receivedError as NSError?)
     }
     
     // MARK: Helpers
