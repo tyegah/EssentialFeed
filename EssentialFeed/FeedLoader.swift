@@ -21,7 +21,7 @@ import Foundation
 //extension LoadFeedResult: Equatable where Error:Equatable {}
 
 // Using the typealias instead of enum because the Generic Error type is removed
-public typealias LoadFeedResult = Swift.Result<[FeedItem], Error>
+public typealias LoadFeedResult = Swift.Result<[FeedImage], Error>
 
 
 public protocol FeedLoader {
