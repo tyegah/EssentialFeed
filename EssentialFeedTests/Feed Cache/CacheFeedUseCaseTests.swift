@@ -23,12 +23,13 @@ class LocalFeedLoader {
     
     func save(_ items: [FeedItem], completion: @escaping (Error?) -> Void) {
         store.deleteCachedFeed { [weak self] error in
-            guard let self = self else {
-                return
-            }
+            guard let self = self else { return }
             
             if error == nil {
-                self.store.insert(items, timeStamp: self.currentDate(), completion: completion)
+                self.store.insert(items, timeStamp: self.currentDate()) {[weak self] error in
+                    guard self != nil else { return }
+                    completion(error)
+                }
             }
             else {
                 completion(error)
@@ -175,7 +176,8 @@ class CacheFeedUseCaseTests: XCTestCase {
     }
     
     
-    // This to handle the crash on the [unowned self] call inside the save method
+    // This is to handle the crash on the [unowned self] call inside the save method
+    // Only for deletion error case
     func test_save_doesNotDeliverDeletionErrorAfterSUTHasBeenDeallocated() {
         let store = FeedStoreSpy()
         // Make SUT a var because we want to set it to nil
@@ -185,6 +187,21 @@ class CacheFeedUseCaseTests: XCTestCase {
         sut?.save([uniqueItem()], completion: { receivedResults.append($0)})
         sut = nil
         store.completeDeletion(with: anyNSError())
+        
+        XCTAssertTrue(receivedResults.isEmpty)
+    }
+    
+    // Handle instance deallocation for insertion error case
+    func test_save_doesNotDeliverInsertionErrorAfterSUTHasBeenDeallocated() {
+        let store = FeedStoreSpy()
+        // Make SUT a var because we want to set it to nil
+        var sut:LocalFeedLoader? = LocalFeedLoader(store: store, currentDate: Date.init)
+        var receivedResults = [Error?]()
+        
+        sut?.save([uniqueItem()], completion: { receivedResults.append($0)})
+        store.completeDeletionSuccessfully()
+        sut = nil
+        store.completeInsertion(with: anyNSError())
         
         XCTAssertTrue(receivedResults.isEmpty)
     }
