@@ -7,38 +7,29 @@
 
 import Foundation
 
+// To match with the local counterpart (LocalFeedLoader)
+// We add another data transfer model for the remote data to remove its dependency from FeedItem model
+internal struct RemoteFeedItem:Decodable {
+    let id: UUID
+    let description: String?
+    let location: String?
+    let image: URL
+}
+
 final class FeedItemsMapper {
     private struct Root:Decodable {
-        let items: [Item]
-        
-        var feedItems: [FeedItem] {
-            return items.map { $0.item }
-        }
-    }
-
-    private struct Item:Decodable {
-        let id: UUID
-        let description: String?
-        let location: String?
-        let image: URL
-        
-        var item: FeedItem {
-            FeedItem(id: id,
-                     description: description,
-                     location: location,
-                     imageURL: image)
-        }
+        let items: [RemoteFeedItem]
     }
     
     private static var OK_200: Int {
         return 200
     }
     
-    static func map(_ data: Data, _ response: HTTPURLResponse) -> RemoteFeedLoader.Result {
+    static func map(_ data: Data, _ response: HTTPURLResponse) throws -> [RemoteFeedItem] {
         guard response.statusCode == OK_200, let root = try? JSONDecoder().decode(Root.self, from: data) else {
-            return .failure(RemoteFeedLoader.Error.invalidData)
+            throw RemoteFeedLoader.Error.invalidData
         }
         
-        return .success(root.feedItems)
+        return root.items
     }
 }
