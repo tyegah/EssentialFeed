@@ -7,15 +7,6 @@
 
 import Foundation
 
-// To match with the local counterpart (LocalFeedLoader)
-// We add another data transfer model for the remote data to remove its dependency from FeedItem model
-internal struct RemoteFeedItem:Decodable {
-    let id: UUID
-    let description: String?
-    let location: String?
-    let image: URL
-}
-
 final class FeedItemsMapper {
     private struct Root:Decodable {
         let items: [RemoteFeedItem]
