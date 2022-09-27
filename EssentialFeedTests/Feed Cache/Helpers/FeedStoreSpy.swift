@@ -16,6 +16,7 @@ import EssentialFeed
 class FeedStoreSpy: FeedStore {
     var deletionCompletions = [DeletionCompletion]()
     var insertionCompletions = [InsertionCompletion]()
+    var retrievalCompletions = [RetrievalCompletion]()
 //    var insertions = [(items:[FeedItem], timeStamp: Date)]()
     //** Because the LocalFeedLoader is calling multiple methods of the FeedStore
     //** and they need to be in the right order
@@ -58,7 +59,13 @@ class FeedStoreSpy: FeedStore {
         insertionCompletions[index](nil)
     }
     
-    func retrieve() {
+    // retrieve
+    func retrieve(completion: @escaping RetrievalCompletion) {
         receivedMessages.append(.retrieve)
+        retrievalCompletions.append(completion)
+    }
+    
+    func completeRetrieval(with error: Error, at index: Int = 0) {
+        retrievalCompletions[index](error)
     }
 }
