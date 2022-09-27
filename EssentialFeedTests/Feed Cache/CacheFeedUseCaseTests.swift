@@ -12,7 +12,7 @@ import EssentialFeed
 
 // These tests is driven by the Cache Feed Use Case from BDD specs
 class CacheFeedUseCaseTests: XCTestCase {
-    func test_init_doesNotDeleteCacheUponCreation() {
+    func test_init_doesNotMessageStoreUponCreation() {
         let (_, store) = makeSUT()
         XCTAssertEqual(store.receivedMessages, [])
     }
