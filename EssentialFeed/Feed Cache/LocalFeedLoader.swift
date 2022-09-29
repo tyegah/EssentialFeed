@@ -11,9 +11,6 @@ public final class LocalFeedLoader {
     private let store:FeedStore
     private let currentDate: () -> Date
     
-    public typealias SaveResult = Error?
-    public typealias LoadResult = LoadFeedResult
-    
     // This currentDate is created with closure because it is not a pure function, which means that
     // Everytime init() is called, it creates a different value
     // So instead of letting the UseCase produce the current date via the impure function (Date.init()) directly
@@ -37,6 +34,8 @@ public final class LocalFeedLoader {
 }
     
 extension LocalFeedLoader {
+    public typealias SaveResult = Error?
+    
     public func save(_ feed: [FeedImage], completion: @escaping (SaveResult) -> Void) {
         store.deleteCachedFeed { [weak self] error in
             guard let self = self else { return }
@@ -59,6 +58,8 @@ extension LocalFeedLoader {
 }
 
 extension LocalFeedLoader: FeedLoader {
+    public typealias LoadResult = LoadFeedResult
+    
     public func load(completion: @escaping (LoadResult) -> Void) {
         store.retrieve { [weak self] result in
             guard let self = self else { return }
