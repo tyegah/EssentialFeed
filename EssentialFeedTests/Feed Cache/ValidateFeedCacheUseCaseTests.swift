@@ -9,7 +9,7 @@ import XCTest
 import EssentialFeed
 
 //** This Validate Feed Cache Use Case is created because:
-//**    On the Load Feed Cache function, we violate the query/command principle
+//**    On the Load Feed Cache function, we violate the query separation principle
 //**    which means that the query (getting data from cache) ideally should not have a side effect
 //**    but we included the deletion (delete cache when it's expired on load) inside the load/query function
 //**    and deletion causes side effects (it alters the data).
