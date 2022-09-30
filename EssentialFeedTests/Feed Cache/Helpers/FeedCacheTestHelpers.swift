@@ -18,6 +18,8 @@ func uniqueImageFeed() -> (models:[FeedImage], locals: [LocalFeedImage]) {
     return (imageFeed, localImageFeed)
 }
 
+
+//** These date extensions are separated because one is for Cache Policy DSL and the other is just a helper than can be reused in another component
 extension Date {
     func minusFeedCacheMaxAge() -> Date {
         return adding(days: -feedCacheMaxAgeInDays)
@@ -27,10 +29,12 @@ extension Date {
         return 7
     }
     
-    func adding(days: Int) -> Date {
+    private func adding(days: Int) -> Date {
         Calendar(identifier: .gregorian).date(byAdding: .day, value: days, to: self)!
     }
-    
+}
+
+extension Date {
     func adding(seconds: TimeInterval) -> Date {
         self + seconds
     }
