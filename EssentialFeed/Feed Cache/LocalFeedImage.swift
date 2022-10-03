@@ -13,7 +13,9 @@ import Foundation
 
 //*** The codable conformance here is leaking framework details into the Feed Cache Module
 //*** The solution is to create a framework specific model inside the CodableFeedStore
-public struct LocalFeedImage:Equatable, Codable {
+
+//
+public struct LocalFeedImage:Equatable {
     public let id: UUID
     public let description: String?
     public let location: String?
