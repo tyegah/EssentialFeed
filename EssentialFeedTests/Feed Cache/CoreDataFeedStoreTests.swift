@@ -21,7 +21,7 @@ class CoreDataFeedStoreTests: XCTestCase, FeedStoreSpecs {
     }
     
     func test_retrieve_deliversFoundValueOnNonEmptyCache() {
-
+        
     }
     
     func test_retrieve_hasNoSideEffectsOnNonEmptyCache() {
